@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static "css/welcome.css" %}" />
+{% endblock %}
+
+{% block javascript %}
+<script type='text/javascript' src="{% static "js/welcome.js" %}"></script>
+{% endblock %}
+
+{% block body %}
+<div>
+	<h1>Hello</h1>
+</div>
+{% endblock %}

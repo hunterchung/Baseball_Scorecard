@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static "css/current_game.css" %}" />
+{% endblock %}
+
+{% block javascript %}
+<script type='text/javascript' src="{% static "js/current_game.js" %}"></script>
+{% endblock %}
+
+{% block body %}
+<table id="score_board" class="table table-bordered">
+	<tr>
+		{% for name in score_board_col_names %}
+		<th>{{ name }}</th>
+		{% endfor %}
+	</tr>
+	{% for half_inning_scoreboard in half_inning_scoreboards %}
+	<tr>
+		{% for value in half_inning_scoreboard %}
+		<td>{{ value }}</td>
+		{% endfor %}
+	</tr>
+	{% endfor %}
+</table>
+
+<form id="form1" method="POST">
+{% if current_half_inning == None %}
+<button class="submit btn">Play Ball!</button>
+{% endif %}
+</form>
+{% endblock %}

@@ -14,4 +14,8 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^$', 'scorecard.views.welcome'),    
+    url(r'^add_player/$', 'scorecard.views.add_player'),
+    url(r'^new_game/$', 'scorecard.views.new_game'),
+    url(r'^current_game/$', 'scorecard.views.current_game'),
 )

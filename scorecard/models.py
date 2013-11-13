@@ -19,6 +19,9 @@ import django.db.models
 class Team(models.Model):
     name = models.CharField(max_length='45')
     members = models.ManyToManyField('Player')
+    
+    def __unicode__(self):
+        return self.name
 
 class Player(AbstractUser):
     BATTING_SIDE_OPTIONS = (
@@ -29,6 +32,9 @@ class Player(AbstractUser):
     
     is_left_throw = models.BooleanField()
     batting_side = models.CharField(max_length=10, choices=BATTING_SIDE_OPTIONS)
+    
+    def __unicode__(self):
+        return self.get_full_name()
     
 class Defense_lineup(models.Model):
     pitcher = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.DO_NOTHING)
@@ -95,24 +101,28 @@ class Play(models.Model):
     strikes = models.PositiveIntegerField()
     balls = models.PositiveIntegerField()
     outs = models.PositiveIntegerField() ## after the play
-    scores = models.PositiveIntegerField() ## after the play
+    run = models.PositiveIntegerField() ## after the play
+    
     first_base_runner = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.SET_NULL, null=True, blank=True) ## after the play
     second_base_runner = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.SET_NULL, null=True, blank=True) ## after the play
     third_base_runner = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.SET_NULL, null=True, blank=True) ## after the play
     
     def get_outs(self):
-        if self.play_type in (7, 8, 15, 19, 20, 21, 22):
+        if self.play_type in (STRIKEOUT_LOOKING, STRIKEOUT, CAUGHT_STEALING, SACRIFICE_FLY, GROUND_OUT, FLY_OUT, BUNT):
             return 1
-        elif self.play_type==16:
+        elif self.play_type==DOUBLE_PLAY:
             return 2
-        elif self.play_type==17:
+        elif self.play_type==TRIPLE_PLAY:
             return 3
         else:
             return 0
-
+    
 class At_bat(models.Model):
     inning = models.ForeignKey('Half_inning', on_delete=django.db.models.DO_NOTHING)
-
+    
+    def is_hit(self):
+        return self.play_set.order_by('time').reverse()[0].play_type in (SINGLE, DOUBLE, TRIPLE, HOMERUN)
+    
     
 class Half_inning(models.Model):
     game = models.ForeignKey('Game', on_delete=django.db.models.DO_NOTHING)
@@ -121,6 +131,10 @@ class Half_inning(models.Model):
     
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(null=True, blank=True)
+    
+    def get_run(self):
+        return sum([play.run for at_bat in self.at_bat.set for play in at_bat.play_set])
+            
     
 class Game(models.Model):
     WEATHER_OPTIONS = (
@@ -136,6 +150,16 @@ class Game(models.Model):
     
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
+    
+    def get_current_half_inning(self):
+        try:
+            return self.half_inning_set.order_by('num', 'is_top').reverse()[0]
+        except:
+            return None
+    
+    
+    def __unicode__(self):
+        return "%s @ %s on %s"%(self.away_team.name, self.home_team.name, self.start_time)
     
     
     

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static "css/new_game.css" %}" />
+{% endblock %}
+
+{% block javascript %}
+<script type='text/javascript' src="{% static "js/new_game.js" %}"></script>
+{% endblock %}
+
+{% block body %}
+<form id="form1" method="POST">{% csrf_token %}
+{{ form.as_p }}
+<button class="submit">Create a game</button>
+</form>
+
+{% endblock %}
