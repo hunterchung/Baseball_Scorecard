@@ -18,4 +18,5 @@ urlpatterns = patterns('',
     url(r'^add_player/$', 'scorecard.views.add_player'),
     url(r'^new_game/$', 'scorecard.views.new_game'),
     url(r'^current_game/$', 'scorecard.views.current_game'),
+    url(r'^add_lineups/$', 'scorecard.views.add_lineups'),
 )

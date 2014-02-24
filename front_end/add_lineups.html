@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static "css/add_lineup.css" %}" />
+{% endblock %}
+
+{% block javascript %}
+<script type='text/javascript' src="{% static "js/add_lineup.js" %}"></script>
+{% endblock %}
+
+{% block body %}
+<form id="form1" method="POST">{% csrf_token %}
+	<div class="container">
+		<div class="row">
+			<div class="col-lg-8 col-lg-offset-2"><table class="table">
+				<tr>
+					<th colspan="3" class="text-center"><h1>{{ game.home_team.name }}</h1></th>
+					<th></th>
+					<th colspan="3" class="text-center"><h1>{{ game.away_team.name }}</h1></th>
+				</tr>
+				<tr>
+					<th>order</th>
+					<th>player</th>
+					<th>position</th>
+					<th></th>
+					<th>player</th>
+					<th>position</th>
+				</tr>
+				{% for i in order %}
+				<tr>
+					<td>{{ i }}</td>
+					<td>
+						<select class="form-control">
+							<option>---</option>
+							{% for player in game.home_team.players.all %}
+							<option value="{{ player.id }}">{{ player.get_full_name }}</option>
+							{% endfor %}
+						</select>
+					</td>
+					<td>
+						<select class="form-control">
+							<option>---</option>
+							{% for pos in positions %}
+							<option value="{{ pos }}">{{ pos }}</option>
+							{% endfor %}
+						</select>
+					</td>
+					<td></td>
+					<td>
+						<select class="form-control">
+							<option>---</option>
+							{% for player in game.away_team.players.all %}
+							<option value="{{ player.id }}">{{ player.get_full_name }}</option>
+							{% endfor %}
+						</select>
+					</td>
+					<td>
+						<select class="form-control">
+							<option>---</option>
+							{% for pos in positions %}
+							<option value="{{ pos }}">{{ pos }}</option>
+							{% endfor %}
+						</select>
+					</td>
+				</tr>
+				{% endfor %}
+			</table></div>
+		</div>
+	</div>
+	<div class="text-center"><button class="submit btn btn-lg">Add lineups</button></div>
+</form>
+
+{% endblock %}

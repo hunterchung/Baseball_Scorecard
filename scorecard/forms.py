@@ -30,4 +30,4 @@ class Player_form(ModelForm):
 class Game_form(ModelForm):
     class Meta:
         model = Game
-        exclude = ('end_time')
+        exclude = ('end_time', 'home_lineup', 'away_lineup')

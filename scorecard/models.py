@@ -3,7 +3,6 @@ from django.db import models
 from taggit.managers import TaggableManager
 from django.contrib.auth.models import AbstractUser
 import django.db.models
-# from django_enumfield import enum
 
 # class Position(enum.Enum):
 #     pitcher = 1
@@ -16,12 +15,12 @@ import django.db.models
 #     center_fielder = 8
 #     right_fielder = 9
     
-class Team(models.Model):
-    name = models.CharField(max_length='45')
-    members = models.ManyToManyField('Player')
-    
-    def __unicode__(self):
-        return self.name
+# class Team(models.Model):
+#     name = models.CharField(max_length='45')
+#     players = models.ManyToManyField('Player')
+#     
+#     def __unicode__(self):
+#         return self.name
 
 class Player(AbstractUser):
     BATTING_SIDE_OPTIONS = (
@@ -30,24 +29,24 @@ class Player(AbstractUser):
         ('switch', 'switch'),
     )
     
-    is_left_throw = models.BooleanField()
-    batting_side = models.CharField(max_length=10, choices=BATTING_SIDE_OPTIONS)
+    is_right_throw = models.BooleanField(default=True)
+    batting_side = models.CharField(max_length=10, choices=BATTING_SIDE_OPTIONS, null=True)
     
     def __unicode__(self):
         return self.get_full_name()
     
-class Defense_lineup(models.Model):
-    pitcher = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.DO_NOTHING)
-    catcher = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.DO_NOTHING)
-    first_baseman = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.DO_NOTHING)
-    second_baseman = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.DO_NOTHING)
-    third_baseman = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.DO_NOTHING)
-    shortstop = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.DO_NOTHING)
-    left_fielder = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.DO_NOTHING)
-    center_fielder = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.DO_NOTHING)
-    right_fielder = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.DO_NOTHING)
+# class Defense_lineup(models.Model):
+#     pitcher = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.DO_NOTHING)
+#     catcher = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.DO_NOTHING)
+#     first_baseman = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.DO_NOTHING)
+#     second_baseman = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.DO_NOTHING)
+#     third_baseman = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.DO_NOTHING)
+#     shortstop = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.DO_NOTHING)
+#     left_fielder = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.DO_NOTHING)
+#     center_fielder = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.DO_NOTHING)
+#     right_fielder = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.DO_NOTHING)
 
-class Play(models.Model):
+class Pitch(models.Model):
     SINGLE = '1B'
     DOUBLE = '2B'
     TRIPLE = '3B'
@@ -56,7 +55,7 @@ class Play(models.Model):
     STRIKEOUT = 'K'
     STRIKEOUT_LOOKING = 'Kc'
     FIELDERS_CHOICE = 'FC'
-    HIT_BY_PITCHER = 'HP'
+    HIT_BY_PITCH = 'HP'
     WILD_PITCH = 'WP'
     STOLEN_BASE = 'SB'
     CAUGHT_STEALING = 'CS'
@@ -69,7 +68,11 @@ class Play(models.Model):
     BUNT = 'B'
     # PASS_BALL = 'PB
     
-    PLAY_TYPE_OPTIONS = (
+    FLYBALL = 'FB'
+    GROUNDBALL = 'GB'
+    LINEDRIVE = 'LD'
+    
+    RESULT_OPTIONS = (
         (SINGLE, 'single'),
         (DOUBLE, 'double'),
         (TRIPLE, 'triple'),
@@ -78,7 +81,7 @@ class Play(models.Model):
         (STRIKEOUT, 'strikeout'),
         (STRIKEOUT_LOOKING, 'strikeout looking'),
         (FIELDERS_CHOICE, 'fielder\'s choice'),
-        (HIT_BY_PITCHER, 'hit by pitcher'),
+        (HIT_BY_PITCH, 'hit by pitch'),
         (WILD_PITCH, 'wild pitch'),
         (STOLEN_BASE, 'stolen base'),
         (CAUGHT_STEALING, 'caught stealing'),
@@ -91,50 +94,55 @@ class Play(models.Model):
         (BUNT, 'bunt'),
     )
     
-    batter = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.SET_NULL, null=True, blank=True)
-    Defense_lineup = models.ForeignKey('Defense_lineup', on_delete=django.db.models.DO_NOTHING) ## do not consider changing defense during play yet
-    at_bat = models.ForeignKey('At_bat', on_delete=django.db.models.DO_NOTHING)
+    RESULT_TYPE_OPTIONS = (
+        (FLYBALL, 'fly ball'),
+        (GROUNDBALL, 'ground ball'),
+        (LINEDRIVE, 'linedrive'),
+    )
     
-    play_type = models.CharField(max_length=3, choices=PLAY_TYPE_OPTIONS)
-    time = models.DateTimeField(auto_now_add=True)
-    
+    is_strike = models.BooleanField()
+    swung = models.BooleanField()
+    is_foul = models.BooleanField(default=False)
     strikes = models.PositiveIntegerField()
     balls = models.PositiveIntegerField()
-    outs = models.PositiveIntegerField() ## after the play
+    outs = models.PositiveIntegerField()
+    runner_on_first = models.BooleanField(default=False)
+    runner_on_second = models.BooleanField(default=False)
+    runner_on_third = models.BooleanField(default=False)
+    away_score = models.PositiveIntegerField()
+    home_score = models.PositiveIntegerField()
+    
+    result = models.CharField(max_length=5, choices=RESULT_OPTIONS, blank=False)
+    direction = models.CharField(max_length=5)
     run = models.PositiveIntegerField() ## after the play
+    game = models.ForeignKey('Game', blank=False)
+    result_type = models.CharField(max_length=5, choices=RESULT_TYPE_OPTIONS, blank=False)
     
-    first_base_runner = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.SET_NULL, null=True, blank=True) ## after the play
-    second_base_runner = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.SET_NULL, null=True, blank=True) ## after the play
-    third_base_runner = models.ForeignKey('Player', related_name='+', on_delete=django.db.models.SET_NULL, null=True, blank=True) ## after the play
+    pitcher = models.ForeignKey('Player', related_name='pitch_pitcher')
+    batter = models.ForeignKey('Player', related_name='pitch_batter')
+    catcher = models.ForeignKey('Player', related_name='pitch_catcher')
+    fielder = models.ForeignKey('Player', related_name='pitch_fielder')
     
-    def get_outs(self):
-        if self.play_type in (STRIKEOUT_LOOKING, STRIKEOUT, CAUGHT_STEALING, SACRIFICE_FLY, GROUND_OUT, FLY_OUT, BUNT):
-            return 1
-        elif self.play_type==DOUBLE_PLAY:
-            return 2
-        elif self.play_type==TRIPLE_PLAY:
-            return 3
-        else:
-            return 0
-    
-class At_bat(models.Model):
-    inning = models.ForeignKey('Half_inning', on_delete=django.db.models.DO_NOTHING)
-    
-    def is_hit(self):
-        return self.play_set.order_by('time').reverse()[0].play_type in (SINGLE, DOUBLE, TRIPLE, HOMERUN)
-    
-    
-class Half_inning(models.Model):
-    game = models.ForeignKey('Game', on_delete=django.db.models.DO_NOTHING)
+    inning = models.PositiveIntegerField()
     is_top = models.BooleanField()
-    num = models.PositiveIntegerField()
     
-    start_time = models.DateTimeField(auto_now_add=True)
-    end_time = models.DateTimeField(null=True, blank=True)
-    
-    def get_run(self):
-        return sum([play.run for at_bat in self.at_bat.set for play in at_bat.play_set])
-            
+    def __unicode__(self):
+        return self.result
+        
+    def play_outs(self):
+        if reuslt=='DP':
+            return 2
+        elif result=='TP':
+            return 3
+        elif result in ('K', 'Kc', 'CS', 'SF', 'G', 'F', 'B'):
+            return 1
+        else:
+            raise
+
+# class Lineup(models.Model):
+#     batting_order = models.ManyToManyField('Player')
+#     defense_lineup = models.ForeignKey('Defense_lineup', related_name='lineup_defense_lineup', on_delete=django.db.models.DO_NOTHING)
+#     team = models.ForeignKey('Team')
     
 class Game(models.Model):
     WEATHER_OPTIONS = (
@@ -143,23 +151,20 @@ class Game(models.Model):
         ('Rainy', 'Rainy'),
     )
     
-    home_team = models.ForeignKey('Team', related_name='home_team', on_delete=django.db.models.DO_NOTHING)
-    away_team = models.ForeignKey('Team', related_name='away_team', on_delete=django.db.models.DO_NOTHING)
+    # home_lineup = models.ForeignKey('Lineup', related_name='game_home_lineup', on_delete=django.db.models.DO_NOTHING, null=True, blank=True)
+    # away_lineup = models.ForeignKey('Lineup', related_name='game_away_lineup', on_delete=django.db.models.DO_NOTHING, null=True, blank=True)
+    
+    home_team_name = models.CharField(max_length=100)
+    away_team_name = models.CharField(max_length=100)
+    
     weather = models.CharField(max_length=10, choices=WEATHER_OPTIONS)
-    temperature = models.PositiveIntegerField(null=True, blank=True) ## in Fahrenheit
+    temperature = models.PositiveIntegerField(null=True, blank=True, help_text='in Fahrenheit')
     
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
     
-    def get_current_half_inning(self):
-        try:
-            return self.half_inning_set.order_by('num', 'is_top').reverse()[0]
-        except:
-            return None
-    
-    
     def __unicode__(self):
-        return "%s @ %s on %s"%(self.away_team.name, self.home_team.name, self.start_time)
+        return "%s @ %s on %s"%(self.away_team_name, self.home_team_name, str(self.start_time).split()[0])
     
     
     

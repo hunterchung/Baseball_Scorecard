@@ -26,7 +26,7 @@
 	{% endfor %}
 </table>
 
-<form id="form1" method="POST">
+<form id="form1" method="POST">{{ csrf_token }}
 {% if current_half_inning == None %}
 <button class="submit btn">Play Ball!</button>
 {% endif %}

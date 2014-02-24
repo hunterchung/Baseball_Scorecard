@@ -19,6 +19,7 @@ def add_player(request):
             player = form.save()
             c['message'] = '%s was added.'%(player.get_full_name())
             form = Player_form()
+            return redirect('/add_lineups/')
         else:
             c['errors'] = bpd_form.errors
     else:
@@ -35,8 +36,7 @@ def new_game(request):
         form = Game_form(request.POST)
         if form.is_valid():
             game = form.save()
-            c['message'] = 'A new game was added.'
-            return welcome(request)
+
         else:
             c['errors'] = bpd_form.errors
     else:
@@ -44,9 +44,26 @@ def new_game(request):
     c['form'] = form
         
     return render(request, 'new_game.html', c)
-    
-def current_game(request):
-    game = Game.objects.filter(end_time=None).prefetch_related('half_inning_set__at_bat_set__play_set').reverse()[0]
+
+def add_lineups(request):
+    c = {}
+    c['game'] = Game.objects.filter(end_time=None).prefetch_related('home_team__players').prefetch_related('away_team__players').reverse()[0]
+    c['positions'] = (
+        'P',
+        'C',
+        '1B',
+        '2B',
+        '3B',
+        'SS',
+        'RF',
+        'CF',
+        'LF',
+        'DH',
+    )
+    c['order'] = range(1, 11)
+    return render(request, 'add_lineups.html', c)
+
+def get_scoreboard(game):
     current_half_inning = game.get_current_half_inning()
     
     ## need at least 9 innings.
@@ -89,6 +106,20 @@ def current_game(request):
                     for play in at_bat.play_set.all()].count(True)
     )
     
+    return score_board_col_names, top_inning_scoreboard, bottom_inning_scoreboard
+
+def current_game(request):
+    game = Game.objects.filter(end_time=None).prefetch_related('half_inning_set__at_bat_set__play_set').reverse()[0]
+    current_half_inning = game.get_current_half_inning()
+    
+    if request.method=='POST':
+        if current_half_inning:
+            pass
+        else:
+            half_inning = Half_inning.objects.create(game)
+            at_bat = At_bat.objects.create(half_inning)
+    
+    score_board_col_names, top_inning_scoreboard, bottom_inning_scoreboard = get_scoreboard(game)
 
     c = {
         'game': game,
@@ -96,6 +127,7 @@ def current_game(request):
         'half_inning_scoreboards': [top_inning_scoreboard, bottom_inning_scoreboard],
         'current_half_inning': current_half_inning,
     }
+    c.update(csrf(request))
     
     return render(request, 'current_game.html', c)
     
